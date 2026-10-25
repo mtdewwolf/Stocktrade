@@ -3,12 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "license": "UNLICENSED",
-  "engines": {"node": ">=22"},
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node scripts/build.cjs",
     "build:check": "node scripts/build.cjs --check",
     "test": "node --test tests/*.test.cjs",
-    "test:browser": "node scripts/browser-tests.cjs"
+    "test:browser": "node scripts/browser-tests.cjs",
+    "native:spec": "node native/tools/extract-spec.cjs",
+    "native:verify": "node native/tools/verify-spec.cjs",
+    "native:check": "node native/tools/extract-spec.cjs --check",
+    "native:engine-golden": "node native/tools/generate-engine-golden.cjs"
   },
   "devDependencies": {
     "tailwindcss": "3.4.17",

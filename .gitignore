@@ -1,3 +1,9 @@
 node_modules/
 .tmp/
 test-results/
+native/spec/build/
+native/.gradle/
+native/.kotlin/
+native/build/
+native/*/build/
+native/local.properties
