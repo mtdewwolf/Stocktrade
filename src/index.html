@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wall Street Time Machine: 1980–2026 Mobile Market Game (98 Assets + Pro Abilities)</title>
+  <style>/* @APP_CSS */</style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start bg-[#050811] text-slate-100 select-none">
+
+  <!-- MOBILE APP SHELL CONTAINER -->
+  <div id="appShellContainer" class="w-full mobile-shell-narrow min-h-screen flex flex-col bg-[#0b101e] sm:border-x sm:border-slate-800/80 shadow-2xl relative pb-20">
+
+    <!-- STICKY TOP HEADER: LIVE NET WORTH, DATE & TIME CONTROLS -->
+    <header class="sticky top-0 z-30 bg-[#0b101e]/95 backdrop-blur-md border-b border-slate-800/90 px-3 pt-2.5 pb-2 shadow-lg">
+
+      <!-- Row 1: Date, Era Badge & Quick Utility Icons -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-base shrink-0">
+            📈
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span id="currentDateDisplay" class="font-mono-num font-extrabold text-white text-sm sm:text-base truncate">Wed, Jan 2, 1980</span>
+              <span id="eraBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 truncate">
+                Volcker Era
+              </span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] text-slate-400">
+              <span>NW: <strong id="headerQuickNetWorth" class="font-mono-num text-emerald-400">$10,000.00</strong></span>
+              <span class="text-slate-600">•</span>
+              <span>Power: <strong id="headerQuickCash" class="font-mono-num text-cyan-300">$10,000.00</strong></span>
+              <span id="headerLeverageBadge" class="hidden text-[9px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono-num">1x</span>
+              <span id="headerPrestigeBadge" class="hidden text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono-num font-bold">★0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Right Action Icons -->
+        <div class="flex items-center gap-1 shrink-0">
+          <button id="btnMysteryToggle" type="button" title="Toggle Blind Mystery Ticker Mode (Anti-Hindsight)" class="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800/90 text-slate-300 border border-slate-700 flex items-center gap-1">
+            🕵️ <span id="mysteryStateText" class="hidden sm:inline text-[10px]">Blind: OFF</span>
+          </button>
+          <button id="btnOpenTutorialModal" type="button" title="Interactive Tutorials, Visual Feature Tour &amp; Pro Hot-Tips" class="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+            💡 <span class="hidden sm:inline text-[10px]">Tips</span>
+          </button>
+          <button id="btnOpenWrapUpModal" type="button" title="Career Scorecard, Share Code &amp; Prestige" class="p-1.5 rounded-lg text-xs bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30">
+            🏅 <span class="sr-only">Scorecard</span>
+          </button>
+          <button id="btnOpenPerksModal" type="button" title="Tycoon Abilities, Perks &amp; Achievements" class="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 flex items-center gap-1">
+            ⚡ <span id="perksUnlockedCountBadge" class="font-mono-num">2/10</span>
+          </button>
+          <button id="btnAutoPauseToggle" type="button" title="Auto-pause on crashes &amp; IPOs" class="px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+            <span id="autoPauseDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span class="sr-only">Event Pause:</span>
+            <span id="autoPauseStateText">ON</span>
+          </button>
+          <button id="btnOpenEraModal" type="button" title="Historical Era Time-Jump" class="p-1.5 rounded-lg text-xs bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700">
+            ⏳ <span class="sr-only">Era Bookmarks</span>
+          </button>
+          <button id="btnSoundToggle" type="button" title="Toggle Sound Effects" class="p-1.5 rounded-lg text-xs bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700">
+            🔊 <span id="soundStateText" class="sr-only">SFX</span>
+          </button>
+          <button id="btnToggleShellWidth" type="button" title="Toggle Phone / Tablet Width" class="hidden sm:inline-flex p-1.5 rounded-lg text-xs bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700">
+            📱
+          </button>
+          <button id="btnOpenResetModal" type="button" title="Start New Campaign" class="p-1.5 rounded-lg text-xs bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30">
+            ↺ <span class="sr-only">New Game</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Row 2: Thumb-Friendly Time Ticker & Speed Slider Bar -->
+      <div class="mt-2 bg-slate-900/95 border border-slate-800 rounded-xl p-1.5 flex flex-col gap-1.5">
+        <div class="flex items-center justify-between gap-1.5">
+          <button id="btnPlayPause" type="button" class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg font-extrabold text-xs tracking-wide transition-all bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/15">
+            <span id="playPauseIcon">▶</span>
+            <span id="playPauseLabel">PLAY</span>
+          </button>
+
+          <button id="btnStep1Day" type="button" class="px-2.5 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 transition">
+            +1D
+          </button>
+          <button id="btnStep5Days" type="button" class="px-2.5 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 transition">
+            +1W
+          </button>
+          <button id="btnStep21Days" type="button" class="px-2.5 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 transition">
+            +1M
+          </button>
+        </div>
+
+        <!-- Speed Slider + Preset Pills -->
+        <div class="flex items-center justify-between gap-2 px-1">
+          <label for="speedSlider" class="text-[11px] text-slate-400 font-medium shrink-0">
+            Speed: <strong id="speedValueLabel" class="font-mono-num text-emerald-400">5d/s</strong>
+          </label>
+          <input id="speedSlider" type="range" min="1" max="252" value="5" class="flex-1" />
+          <div class="hidden sm:flex items-center gap-1 shrink-0">
+            <button type="button" data-speed="1" class="speed-preset-btn px-1.5 py-0.5 rounded text-[10px] font-mono-num bg-slate-800 text-slate-300">1d/s</button>
+            <button type="button" data-speed="5" class="speed-preset-btn px-1.5 py-0.5 rounded text-[10px] font-mono-num bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">5d/s</button>
+            <button type="button" data-speed="21" class="speed-preset-btn px-1.5 py-0.5 rounded text-[10px] font-mono-num bg-slate-800 text-slate-300">1mo/s</button>
+            <button type="button" data-speed="63" class="speed-preset-btn px-1.5 py-0.5 rounded text-[10px] font-mono-num bg-slate-800 text-slate-300">1qtr/s</button>
+            <button type="button" data-speed="120" class="speed-preset-btn px-1.5 py-0.5 rounded text-[10px] font-mono-num bg-slate-800 text-slate-300">6mo/s</button>
+            <button type="button" data-speed="252" class="speed-preset-btn px-1.5 py-0.5 rounded text-[10px] font-mono-num bg-slate-800 text-slate-300">1yr/s</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Compact Timeline Progress + Breaking Headline Ticker -->
+      <div class="mt-1.5">
+        <div class="relative h-1.5 bg-slate-900 rounded-full overflow-hidden">
+          <div id="timelineProgressBar" class="h-full bg-gradient-to-r from-emerald-500 via-cyan-400 to-indigo-500 transition-all duration-75" style="width: 0.01%"></div>
+        </div>
+        <button type="button" id="headerNewsBarBtn" class="w-full text-left mt-1.5 flex items-center gap-1.5 text-[11px] bg-slate-900/70 border border-slate-800/80 rounded-lg px-2 py-1 cursor-pointer hover:bg-slate-800/60 transition">
+          <span id="newsImpactBadge" class="shrink-0 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+            WIRE
+          </span>
+          <span id="latestNewsDate" class="shrink-0 font-mono-num text-[10px] text-slate-400">Jan 2, 1980</span>
+          <span id="latestNewsHeadline" class="truncate text-slate-200 font-medium flex-1">
+            Gold surges past $600/oz as Fed Chair Paul Volcker battles 13.5% inflation.
+          </span>
+        </button>
+        <!-- Active Scenario / Daily Blitz Goal Strip -->
+        <div id="activeScenarioBanner" class="hidden mt-1.5 flex items-center justify-between gap-2 text-[11px] bg-amber-500/15 border border-amber-500/40 rounded-lg px-2.5 py-1 text-amber-200">
+          <div class="truncate">
+            <strong id="activeScenarioTitle" class="text-amber-300">🎯 Scenario:</strong>
+            <span id="activeScenarioGoalText">Reach $50,000 by Dec 2002</span>
+          </div>
+          <button id="btnExitScenarioMode" type="button" class="text-[10px] font-bold text-rose-300 hover:underline shrink-0">Exit</button>
+        </div>
+        <!-- Rotating Contextual Era Hot-Tip Bar -->
+        <div id="contextualHotTipBar" class="mt-1.5 flex items-center justify-between gap-1.5 text-[11px] bg-indigo-950/60 border border-indigo-500/30 rounded-lg px-2 py-1">
+          <button type="button" id="btnCycleHotTip" class="flex items-center gap-1.5 min-w-0 flex-1 cursor-pointer">
+            <span class="shrink-0 px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-amber-400/20 text-amber-300 border border-amber-400/40">HOT TIP</span>
+            <span id="hotTipBannerText" class="truncate text-indigo-200 font-medium flex-1">
+              1980–82 Volcker Tip: Uninvested Cash earns 14%–19% APY while you wait for the Dec 1980 Apple &amp; Nike IPOs!
+            </span>
+          </button>
+          <button id="btnOpenGuideFromBanner" type="button" class="shrink-0 px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30">
+            📖 Tour
+          </button>
+        </div>
+      </div>
+
+      <div class="hidden">
+        <span id="dayIndexDisplay">1</span>
+        <span id="totalDaysDisplay">11,850</span>
+        <span id="fedRateDisplay">14.00%</span>
+        <span id="spxReturnHeader">+0.0%</span>
+        <span id="alphaHeader">+0.0%</span>
+      </div>
+    </header>
+
+    <!-- =================================================================== -->
+    <!-- SCREEN 1: TRADE (CHART + LONG/SHORT + MARGIN + PRE-IPO/LIMIT ORDERS)-->
+    <!-- =================================================================== -->
+    <main id="screenTrade" class="app-screen flex-1 flex flex-col gap-2.5 p-3">
+
+      <!-- Quick Stock Carousel / Selector Header -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 flex items-center justify-between gap-2">
+        <button id="btnPrevStock" type="button" title="Previous Tradable Stock" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 flex items-center justify-center text-slate-200 font-bold border border-slate-700 shrink-0">
+          ◀
+        </button>
+
+        <button type="button" id="btnQuickOpenMarket" class="flex-1 text-center cursor-pointer min-w-0">
+          <span class="flex items-center justify-center gap-1.5 flex-wrap">
+            <span id="chartSymbolTitle" class="font-mono-num text-base font-extrabold text-white">SPX</span>
+            <span id="chartSectorBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Index</span>
+            <span id="stockForensicBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">AAA Core</span>
+          </span>
+          <span class="flex items-center justify-center gap-1.5 mt-0.5">
+            <span id="chartCompanyTitle" class="text-xs text-slate-300 truncate">S&amp;P 500 Index Fund</span>
+            <span class="text-[10px] text-emerald-400 font-semibold">▼ 98 Assets</span>
+          </span>
+        </button>
+
+        <button id="btnNextStock" type="button" title="Next Tradable Stock" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 flex items-center justify-center text-slate-200 font-bold border border-slate-700 shrink-0">
+          ▶
+        </button>
+      </div>
+
+      <!-- Interactive Chart Card -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col">
+        <div class="flex items-baseline justify-between gap-2 flex-wrap">
+          <div>
+            <div id="chartCurrentPrice" class="font-mono-num text-2xl font-extrabold text-emerald-400">$105.76</div>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span id="chartPeriodReturn" class="font-mono-num text-xs font-semibold text-emerald-400">Period: +0.00%</span>
+              <span class="text-slate-600">•</span>
+              <span id="chartDividendBadge" class="text-[11px] font-mono-num text-cyan-400">Yield: 1.8%</span>
+            </div>
+          </div>
+
+          <!-- Chart Mode & 200D SMA Overlay Controls -->
+          <div class="flex items-center gap-1">
+            <button id="btnToggleSmaOverlay" type="button" title="Toggle 200-Day Simple Moving Average Line" class="px-2 py-1 rounded-lg text-[10px] font-mono-num font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+              200D SMA: ON
+            </button>
+            <div class="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+              <button id="btnChartModeStock" type="button" class="px-2 py-1 rounded-md text-[11px] font-semibold bg-emerald-500 text-slate-950">Stock Price</button>
+              <button id="btnChartModePortfolio" type="button" class="px-2 py-1 rounded-md text-[11px] font-medium text-slate-300 hover:text-white">Net Worth vs S&amp;P</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="relative h-56 w-full mt-2 bg-[#080d1a] rounded-xl border border-slate-800/80 overflow-hidden">
+          <canvas role="img" aria-label="Price or portfolio history chart; current values appear above and in the portfolio" id="mainChartCanvas" class="w-full h-full block"></canvas>
+          <div id="chartHoverTooltip" class="hidden pointer-events-none absolute top-2 left-2 bg-slate-900/95 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono-num shadow-xl"></div>
+        </div>
+
+        <!-- Timeframe Selector Pills -->
+        <div class="grid grid-cols-5 gap-1.5 mt-2.5">
+          <button type="button" data-tf="63" class="chart-tf-btn py-1 rounded-lg text-xs font-mono-num bg-slate-800 text-slate-300">3M</button>
+          <button type="button" data-tf="252" class="chart-tf-btn py-1 rounded-lg text-xs font-mono-num bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">1Y</button>
+          <button type="button" data-tf="1260" class="chart-tf-btn py-1 rounded-lg text-xs font-mono-num bg-slate-800 text-slate-300">5Y</button>
+          <button type="button" data-tf="2520" class="chart-tf-btn py-1 rounded-lg text-xs font-mono-num bg-slate-800 text-slate-300">10Y</button>
+          <button type="button" data-tf="99999" class="chart-tf-btn py-1 rounded-lg text-xs font-mono-num bg-slate-800 text-slate-300">MAX</button>
+        </div>
+
+        <!-- Collapsible Company Story & Details (Keeps Chart Card Clean) -->
+        <details class="mt-2 pt-1.5 border-t border-slate-800/70 text-[11px] text-slate-400 group">
+          <summary class="cursor-pointer font-semibold text-slate-300 hover:text-white flex items-center justify-between list-none">
+            <span>ℹ️ Asset History &amp; 52-Week Stats</span>
+            <span class="text-[10px] text-slate-500 group-open:rotate-180 transition">▼</span>
+          </summary>
+          <div id="companyProfileBox" class="mt-1.5 flex flex-col gap-1">
+            <div id="companyHistoryText" class="text-slate-300 leading-snug">Broad US large-cap index tracking 500 leading publicly traded companies across all sectors.</div>
+            <div class="flex justify-between font-mono-num text-[10px] text-slate-400 pt-0.5">
+              <span>IPO/Start: <strong id="companyIpoDate" class="text-slate-200">Jan 2, 1980</strong></span>
+              <span>52W Range: <strong id="company52WRange" class="text-slate-200">$105 / $105</strong></span>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Mobile Pro Trading Ticket Card (Long / Short / Margin / Pre-IPO / Limit) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">PRO ORDER DESK</span>
+            <h3 id="tradeDeskTitle" class="text-sm font-extrabold text-white">SPX — S&amp;P 500</h3>
+          </div>
+          <!-- Margin Leverage Selector Pill -->
+          <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <span class="text-[10px] text-slate-400 px-1">Margin:</span>
+            <button type="button" data-leverage="1" class="leverage-btn px-2 py-0.5 rounded-lg text-[10px] font-mono-num font-bold bg-emerald-500 text-slate-950">1x</button>
+            <button type="button" data-leverage="1.5" class="leverage-btn px-2 py-0.5 rounded-lg text-[10px] font-mono-num text-slate-300 hover:text-white">1.5x</button>
+            <button type="button" data-leverage="2" class="leverage-btn px-2 py-0.5 rounded-lg text-[10px] font-mono-num text-slate-300 hover:text-white">2x</button>
+            <button id="btnLeverage25" type="button" data-leverage="2.5" title="Unlock via Prestige ★ or Quant AI Cluster" class="leverage-btn px-2 py-0.5 rounded-lg text-[10px] font-mono-num text-amber-300/70 hover:text-amber-200">2.5x</button>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 block">MARK PRICE</span>
+            <span id="tradeDeskPrice" class="font-mono-num text-sm font-bold text-emerald-400">$105.76</span>
+          </div>
+        </div>
+
+        <!-- Current Holding Strip (Supports both Long & Short Positions) -->
+        <div class="grid grid-cols-4 gap-1.5 bg-slate-950/90 p-2 rounded-xl border border-slate-800/90 text-[11px]">
+          <div>
+            <div class="text-[9px] text-slate-400 uppercase">Position</div>
+            <div id="tradeDeskOwnedShares" class="font-mono-num font-bold text-white">0.00</div>
+          </div>
+          <div>
+            <div class="text-[9px] text-slate-400 uppercase">Avg Entry</div>
+            <div id="tradeDeskAvgCost" class="font-mono-num text-slate-300">—</div>
+          </div>
+          <div>
+            <div class="text-[9px] text-slate-400 uppercase">Mkt Value</div>
+            <div id="tradeDeskOwnedValue" class="font-mono-num font-bold text-white">$0.00</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[9px] text-slate-400 uppercase">Open P&amp;L</div>
+            <div id="tradeDeskPositionPnL" class="font-mono-num text-slate-300">0.0%</div>
+          </div>
+        </div>
+
+        <!-- Pre-IPO Syndicate Queue Banner (When stock has not IPO'd yet!) -->
+        <div id="tradeUnavailableBanner" class="hidden p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs text-amber-200 flex flex-col gap-2">
+          <div id="unavailableBannerText">
+            This company is not actively trading on <span id="unavailableDateSpan">this date</span>.
+          </div>
+          <div id="preIpoSyndicateBox" class="flex items-center justify-between gap-2 pt-1 border-t border-amber-500/20">
+            <span class="text-[11px] text-amber-100">Queue Day-1 IPO Auto-Buy ($<span id="preIpoOrderAmtPreview">1,000</span>):</span>
+            <button id="btnQueuePreIpoOrder" type="button" class="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-[11px] shrink-0">
+              ⚡ Pre-Order IPO
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Order Controls -->
+        <div id="tradeControlsContainer" class="flex flex-col gap-2.5">
+          <!-- Dollar Input & Buying Power -->
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <label for="orderDollarInput" class="text-slate-300 font-semibold">Order Amount ($ USD)</label>
+              <span class="text-slate-400 text-[11px]">Buying Power: <strong id="tradeDeskCashAvailable" class="font-mono-num text-cyan-300">$10,000.00</strong></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="relative flex-1">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono-num text-sm">$</span>
+                <input id="orderDollarInput" type="number" min="1" step="100" value="1000" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl pl-7 pr-3 py-2 text-base font-mono-num text-white outline-none" />
+              </div>
+              <div class="text-right text-[11px] text-slate-400 shrink-0">
+                <div>Est. Shares</div>
+                <strong id="estSharesOutput" class="font-mono-num text-slate-200">9.455</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Cash Sizing Pills -->
+          <div class="grid grid-cols-4 gap-1.5">
+            <button type="button" data-cashpct="0.1" class="quick-cash-btn py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-mono-num font-semibold text-slate-200 border border-slate-700">10%</button>
+            <button type="button" data-cashpct="0.25" class="quick-cash-btn py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-mono-num font-semibold text-slate-200 border border-slate-700">25%</button>
+            <button type="button" data-cashpct="0.5" class="quick-cash-btn py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-mono-num font-semibold text-slate-200 border border-slate-700">50%</button>
+            <button type="button" data-cashpct="1.0" class="quick-cash-btn py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-95 text-xs font-mono-num font-bold text-emerald-300 border border-emerald-500/40">MAX</button>
+          </div>
+
+          <!-- Primary LONG BUY & SELL Buttons -->
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btnExecuteBuy" type="button" class="py-2.5 px-3 rounded-xl font-extrabold text-xs sm:text-sm uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-slate-950 shadow-lg shadow-emerald-500/20 transition">
+              BUY <span id="btnBuyTickerLabel">SPX</span>
+            </button>
+            <button id="btnExecuteSell" type="button" class="py-2.5 px-3 rounded-xl font-extrabold text-xs sm:text-sm uppercase tracking-wider bg-rose-500 hover:bg-rose-400 active:scale-98 text-white shadow-lg shadow-rose-500/20 transition">
+              SELL $<span id="btnSellAmountLabel">1,000</span>
+            </button>
+          </div>
+
+          <!-- Collapsible Pro Orders Drawer (Short Selling, Limit Dip, Position Trim & Auto-Stop) -->
+          <details class="pt-1.5 border-t border-slate-800/80 group">
+            <summary class="cursor-pointer text-[11px] font-bold text-indigo-300 hover:text-indigo-200 flex items-center justify-between list-none py-1">
+              <span>⚡ Pro Orders (Short Sell, Limit -10% &amp; Stop-Loss)</span>
+              <span class="text-[10px] text-slate-400 group-open:rotate-180 transition">▼</span>
+            </summary>
+            <div class="flex flex-col gap-2 pt-2">
+              <!-- 30-Day 5x Options Desk (Calls & Puts) -->
+              <div class="grid grid-cols-2 gap-1.5">
+                <button id="btnBuyCallOption" type="button" title="Buy a 30-Trading-Day 5x Leveraged CALL Option using Order Amount as premium" class="py-2 px-2 rounded-xl font-bold text-[11px] bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition">
+                  📈 30D Call (5x)
+                </button>
+                <button id="btnBuyPutOption" type="button" title="Buy a 30-Trading-Day 5x Leveraged PUT Option to profit 5x on crashes!" class="py-2 px-2 rounded-xl font-bold text-[11px] bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition">
+                  📉 30D Put (5x)
+                </button>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button id="btnExecuteShort" type="button" title="Short Sell this asset to profit if its price falls or goes bankrupt!" class="py-2 px-2 rounded-xl font-bold text-[11px] uppercase bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 transition">
+                  📉 Short <span id="btnShortTickerLabel">SPX</span>
+                </button>
+                <button id="btnExecuteCover" type="button" title="Buy to Cover your open Short position" class="py-2 px-2 rounded-xl font-bold text-[11px] uppercase bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 transition">
+                  🔄 Cover Short
+                </button>
+                <button id="btnQueueDipLimitOrder" type="button" title="Queue an automatic Limit Buy order if price drops 10% from current mark" class="py-2 px-2 rounded-xl font-bold text-[11px] bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 transition">
+                  🎯 Limit -10%
+                </button>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button id="btnSell25Pct" type="button" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-rose-300 border border-slate-700">Sell 25% Pos</button>
+                <button id="btnSell50Pct" type="button" class="py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-rose-300 border border-slate-700">Sell 50% Pos</button>
+                <button id="btnSell100Pct" type="button" class="py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-[11px] font-semibold text-rose-300 border border-rose-500/30">Sell Entire Pos</button>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                <div>
+                  <label for="stopLossSelect" class="block text-[10px] text-slate-400 mb-1">Auto Stop-Loss</label>
+                  <select id="stopLossSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none">
+                    <option value="0">None (Hold)</option>
+                    <option value="0.15">-15% Stop</option>
+                    <option value="0.25">-25% Stop</option>
+                    <option value="0.35">-35% Stop</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="takeProfitSelect" class="block text-[10px] text-slate-400 mb-1">Auto Take-Profit</label>
+                  <select id="takeProfitSelect" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none">
+                    <option value="0">None (Let Run)</option>
+                    <option value="0.50">+50% Gain</option>
+                    <option value="1.00">+100% (2x)</option>
+                    <option value="2.00">+200% (3x)</option>
+                    <option value="4.00">+400% (5x)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Active 30D Call/Put Options Strip -->
+        <div id="activeOptionsBox" class="hidden pt-2 border-t border-slate-800/80 text-[11px]">
+          <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="font-bold uppercase text-[10px] text-amber-300">Active 5x Options (<span id="activeOptionsCount">0</span>)</span>
+            <span class="text-[10px] text-slate-400">Auto-settles at 30D expiry</span>
+          </div>
+          <div id="activeOptionsList" class="flex flex-col gap-1 max-h-28 overflow-y-auto"></div>
+        </div>
+
+        <!-- Pending Pre-IPO & Limit Orders Queue Strip -->
+        <div id="pendingOrdersBox" class="hidden pt-2 border-t border-slate-800/80 text-[11px]">
+          <div class="flex items-center justify-between text-slate-400 mb-1">
+            <span class="font-bold uppercase text-[10px] text-cyan-300">Active Queued Orders (<span id="pendingOrdersCount">0</span>)</span>
+            <button id="btnClearPendingOrders" type="button" class="text-[10px] text-rose-400 hover:underline">Cancel All</button>
+          </div>
+          <div id="pendingOrdersList" class="flex flex-col gap-1 max-h-24 overflow-y-auto"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- SCREEN 2: MARKET EXPLORER (50 ASSETS, SECTOR FILTERS & SEARCH)      -->
+    <!-- =================================================================== -->
+    <main id="screenMarket" class="app-screen hidden flex-1 flex flex-col gap-2.5 p-3">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-extrabold text-white">Market Explorer (98 Stocks & Crypto)</h2>
+            <p class="text-[11px] text-slate-400">Stocks, Gold, Bitcoin, IPOs &amp; Historical Bankruptcies</p>
+          </div>
+          <span id="activeListingsBadge" class="text-[11px] font-mono-num px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            32 Active • 53 IPOs
+          </span>
+        </div>
+
+        <!-- Instant Search Input -->
+        <div class="relative">
+          <input id="marketSearchInput" type="text" placeholder="Search 98 stocks & crypto, names, or sectors (e.g. NVDA, Gold, BTC, Healthcare, Retail)..." class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+        </div>
+
+        <!-- Status Filter Pills -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+          <button type="button" data-filter="all" class="market-filter-btn shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950">All</button>
+          <button type="button" data-filter="active" class="market-filter-btn shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300">Tradable Now</button>
+          <button type="button" data-filter="owned" class="market-filter-btn shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300">Owned</button>
+          <button type="button" data-filter="ipo" class="market-filter-btn shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300">Upcoming IPOs</button>
+          <button type="button" data-filter="delisted" class="market-filter-btn shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300">Bankrupt</button>
+        </div>
+
+        <!-- Sector Filter Pills -->
+        <div class="flex items-center gap-1 overflow-x-auto no-scrollbar">
+          <button type="button" data-sector="ALL" class="sector-filter-btn shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">All (98)</button>
+          <button type="button" data-sector="Crypto" class="sector-filter-btn shrink-0 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-amber-300">🪙 Crypto (16)</button>
+          <button type="button" data-sector="Tech" class="sector-filter-btn shrink-0 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">Tech/AI</button>
+          <button type="button" data-sector="Consumer" class="sector-filter-btn shrink-0 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">Consumer</button>
+          <button type="button" data-sector="Retail" class="sector-filter-btn shrink-0 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">Retail</button>
+          <button type="button" data-sector="Finance" class="sector-filter-btn shrink-0 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">Finance</button>
+          <button type="button" data-sector="Healthcare" class="sector-filter-btn shrink-0 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">Healthcare</button>
+          <button type="button" data-sector="Industrial" class="sector-filter-btn shrink-0 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">Industrial/Defense</button>
+          <button type="button" data-sector="Macro" class="sector-filter-btn shrink-0 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">Index/Gold/Oil</button><button type="button" class="hidden">Index/Gold/Crypto</button><button type="button" class="hidden">All Sectors</button>
+        </div>
+      </div>
+
+      <!-- Stock Cards List -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden flex-1 flex flex-col">
+        <div class="grid grid-cols-12 px-3 py-2 bg-slate-950/70 border-b border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          <div class="col-span-5">Ticker / Company</div>
+          <div class="col-span-3 text-right">Price</div>
+          <div class="col-span-2 text-right">1D Chg</div>
+          <div class="col-span-2 text-right">Action</div>
+        </div>
+        <div id="stockListContainer" class="divide-y divide-slate-800/60 overflow-y-auto max-h-[60vh]"></div>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- SCREEN 3: PORTFOLIO (NET WORTH, MARGIN DEBT, HOLDINGS & PERKS)      -->
+    <!-- =================================================================== -->
+    <main id="screenPortfolio" class="app-screen hidden flex-1 flex flex-col gap-2.5 p-3">
+
+      <!-- Hero Net Worth & Alpha Card -->
+      <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-slate-800 rounded-2xl p-4 shadow-lg">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span class="font-bold uppercase tracking-wider text-[11px]">TOTAL PORTFOLIO NET WORTH</span>
+          <span id="netWorthTotalReturnPct" class="font-mono-num font-bold text-emerald-400">+0.00%</span>
+        </div>
+        <div id="kpiNetWorth" class="font-mono-num text-3xl font-extrabold text-white mt-1">$10,000.00</div>
+        <div class="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-800/80 text-xs text-slate-300">
+          <span>1980 Purchasing Power: <strong id="kpiRealNetWorth" class="font-mono-num text-slate-100">$10,000.00</strong></span>
+          <span>Rank: <strong id="kpiInvestorRank" class="text-amber-300">Floor Trainee</strong></span>
+        </div>
+      </div>
+
+      <!-- 2x2 Mobile KPI Grid -->
+      <div class="grid grid-cols-2 gap-2.5">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+          <div class="flex justify-between text-[10px] text-slate-400 uppercase font-semibold">
+            <span>Cash / Margin</span>
+            <span id="cashAllocationPct" class="font-mono-num text-cyan-400">100%</span>
+          </div>
+          <div id="kpiCash" class="font-mono-num text-base font-bold text-cyan-300 mt-1">$10,000.00</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Net Interest: <span id="kpiInterestEarned" class="font-mono-num text-emerald-400">+$0.00</span></div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+          <div class="flex justify-between text-[10px] text-slate-400 uppercase font-semibold">
+            <span>Gross Exposure</span>
+            <span id="activePositionsCount" class="font-mono-num text-slate-300">0 Pos</span>
+          </div>
+          <div id="kpiEquityValue" class="font-mono-num text-base font-bold text-white mt-1">$0.00</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Open P&amp;L: <span id="kpiUnrealizedPnL" class="font-mono-num text-slate-300">$0.00</span></div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+          <div class="flex justify-between text-[10px] text-slate-400 uppercase font-semibold">
+            <span>S&amp;P 500 Bench</span>
+            <span id="kpiBenchmarkReturnPct" class="font-mono-num text-amber-400">+0.0%</span>
+          </div>
+          <div id="kpiBenchmarkValue" class="font-mono-num text-base font-bold text-amber-300 mt-1">$10,000.00</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">CAGR (<span id="kpiYearsElapsed">0.0 Yrs</span>): <strong id="kpiCagr" class="font-mono-num text-indigo-300">0.0%</strong></div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+          <div class="flex justify-between items-center text-[10px] text-slate-400 uppercase font-semibold">
+            <span>Dividends</span>
+            <button id="btnToggleDrip" type="button" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              DRIP: <span id="dripStatusLabel">OFF</span>
+            </button>
+          </div>
+          <div id="kpiDividendsTotal" class="font-mono-num text-base font-bold text-emerald-400 mt-1">+$0.00</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Realized: <span id="kpiRealizedPnL" class="font-mono-num text-slate-300">$0.00</span></div>
+        </div>
+      </div>
+
+      <!-- Open Holdings Card (Long & Short Positions) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex-1 flex flex-col">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">
+            Open Positions (<span id="tabPositionsCount">0</span>)
+          </h3>
+          <button id="btnSellAllPositions" type="button" class="text-[11px] font-semibold text-rose-300 px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-500/30 hidden">
+            Liquidate All
+          </button>
+        </div>
+
+        <div id="tabPanelPositions" class="pt-2 overflow-y-auto max-h-80">
+          <div id="emptyPositionsState" class="text-center py-8 text-xs text-slate-400">
+            You have no open positions yet. Tap <strong>Market</strong> or <strong>Trade</strong> below to go Long or Short!
+          </div>
+          <div id="positionsTableWrapper" class="hidden overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-800 text-[10px] uppercase text-slate-400">
+                  <th class="pb-1.5">Asset</th>
+                  <th class="pb-1.5 text-right">Shares</th>
+                  <th class="pb-1.5 text-right">Value</th>
+                  <th class="pb-1.5 text-right">P&amp;L</th>
+                  <th class="pb-1.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="positionsTableBody" class="divide-y divide-slate-800/60 font-mono-num"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tycoon Lifestyle & Hedge Fund Upgrades (Money Sinks & Passive Buffs) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+        <details class="group" open>
+          <summary class="cursor-pointer flex items-center justify-between list-none">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">MONEY SINKS &amp; PASSIVE BUFFS</span>
+              <h3 class="text-xs font-extrabold text-white">🎩 Tycoon Lifestyle &amp; Fund Upgrades (<span id="lifestyleOwnedCount">0/6</span>)</h3>
+            </div>
+            <span class="text-xs text-slate-400 group-open:rotate-180 transition">▼</span>
+          </summary>
+          <p class="text-[11px] text-slate-400 mt-1 mb-2">
+            Spend cash profits on iconic Wall Street status symbols &amp; fund infrastructure that grant permanent buffs for this campaign.
+          </p>
+          <div id="lifestyleShopContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+        </details>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- SCREEN 4: NEWS WIRE & ORDER LOG                                     -->
+    <!-- =================================================================== -->
+    <main id="screenNews" class="app-screen hidden flex-1 flex flex-col gap-2.5 p-3">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col flex-1">
+        <div class="grid grid-cols-2 gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 mb-3">
+          <button type="button" data-tab="news" class="bottom-tab-btn py-2 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950">
+            Historical News Wire
+          </button>
+          <button type="button" data-tab="trades" class="bottom-tab-btn py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white">
+            Order &amp; Dividend Log (<span id="tabTradesCount">0</span>)
+          </button>
+          <button type="button" data-tab="positions" class="bottom-tab-btn hidden">Open Positions (0)</button>
+        </div>
+
+        <div id="tabPanelNews" class="divide-y divide-slate-800/60 overflow-y-auto max-h-[68vh] pr-1"></div>
+        <div id="tabPanelTrades" class="hidden divide-y divide-slate-800/60 overflow-y-auto max-h-[68vh] text-xs font-mono-num pr-1"></div>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- SCREEN 5: CUSTOM LEADERBOARD & WALL STREET HALL OF FAME             -->
+    <!-- =================================================================== -->
+    <main id="screenLeaderboard" class="app-screen hidden flex-1 flex flex-col gap-2.5 p-3">
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">HALL OF FAME &amp; CUSTOM LEADERBOARD</span>
+            <h2 class="text-sm font-extrabold text-white">Post Your Run or Add a Custom Rival</h2>
+          </div>
+          <button id="btnOpenCustomRivalModal" type="button" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700">
+            + Custom Rival
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+          <select id="leaderboardAvatarSelect" class="sm:col-span-2 bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-sm text-white outline-none">
+            <option value="🦅">🦅 Hawk</option>
+            <option value="🐂">🐂 Bull</option>
+            <option value="🐻">🐻 Bear</option>
+            <option value="🚀">🚀 Rocket</option>
+            <option value="💎">💎 Diamond</option>
+            <option value="🎩">🎩 Tycoon</option>
+            <option value="⚡">⚡ Quant</option>
+          </select>
+
+          <input id="leaderboardNameInput" type="text" maxlength="24" placeholder="Enter Trader Name (e.g. Gordon G.)" class="sm:col-span-5 bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+
+          <select id="leaderboardStrategySelect" class="sm:col-span-5 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-200 outline-none">
+            <option value="Tech Growth Visionary">Tech Growth Visionary</option>
+            <option value="Value &amp; Dividend Compounder">Value &amp; Dividend Compounder</option>
+            <option value="Macro Crash &amp; Short Seller">Macro Crash &amp; Short Seller</option>
+            <option value="Index Boglehead">Index Boglehead</option>
+            <option value="2x Margin Momentum">2x Margin Momentum</option>
+          </select>
+        </div>
+
+        <button id="btnSaveRunToLeaderboard" type="button" class="w-full py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider bg-amber-400 hover:bg-amber-300 active:scale-98 text-slate-950 shadow-md shadow-amber-400/15 transition">
+          🏆 Save Current Portfolio Snapshot to Leaderboard
+        </button>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex-1 flex flex-col gap-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-1">
+            <button type="button" data-lbfilter="all" class="lb-filter-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950">All Rankings</button>
+            <button type="button" data-lbfilter="custom" class="lb-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300">My Saved &amp; Rivals</button>
+            <button type="button" data-lbfilter="legends" class="lb-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300">Wall St Legends</button>
+          </div>
+          <button id="btnClearCustomLeaderboard" type="button" class="text-[11px] text-slate-400 hover:text-rose-300">
+            Clear Saved
+          </button>
+        </div>
+
+        <div class="text-[11px] text-slate-400">
+          Legends scale dynamically to your current date (<strong id="lbComparisonDateLabel" class="text-slate-200">Jan 2, 1980</strong>) so you can see how you stack up at every point in history!
+        </div>
+
+        <div id="leaderboardListContainer" class="flex flex-col gap-2 overflow-y-auto max-h-[52vh] pr-0.5"></div>
+      </div>
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- FIXED BOTTOM 5-SCREEN MOBILE NAVIGATION BAR                         -->
+    <!-- =================================================================== -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full mobile-shell-narrow bg-[#090e1a]/95 backdrop-blur-md border-t border-slate-800 px-2 py-1.5 grid grid-cols-5 gap-1 shadow-2xl" id="bottomNavBar">
+      <button type="button" data-screen="trade" class="mobile-nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-emerald-400 bg-emerald-500/10 font-bold">
+        <span class="text-base leading-none">📊</span>
+        <span class="text-[10px] mt-1">Trade</span>
+      </button>
+      <button type="button" data-screen="market" class="mobile-nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-slate-400 hover:text-slate-200 font-medium">
+        <span class="text-base leading-none">🏛️</span>
+        <span class="text-[10px] mt-1">Market</span>
+      </button>
+      <button type="button" data-screen="portfolio" class="mobile-nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-slate-400 hover:text-slate-200 font-medium relative">
+        <span class="text-base leading-none">💼</span>
+        <span class="text-[10px] mt-1">Portfolio</span>
+        <span id="navPortfolioBadge" class="hidden absolute top-0.5 right-3 w-4 h-4 rounded-full bg-emerald-500 text-slate-950 font-mono-num text-[9px] font-extrabold flex items-center justify-center">0</span>
+      </button>
+      <button type="button" data-screen="news" class="mobile-nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-slate-400 hover:text-slate-200 font-medium">
+        <span class="text-base leading-none">📰</span>
+        <span class="text-[10px] mt-1">Wire/Log</span>
+      </button>
+      <button type="button" data-screen="leaderboard" class="mobile-nav-btn flex flex-col items-center justify-center py-1 rounded-xl text-slate-400 hover:text-slate-200 font-medium">
+        <span class="text-base leading-none">🏆</span>
+        <span class="text-[10px] mt-1">Ranks</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-1.5 max-w-sm w-[92%] pointer-events-none"></div>
+  <div id="floatingPnlContainer" class="fixed top-12 right-6 z-50 pointer-events-none flex flex-col items-end gap-1"></div>
+
+  <!-- MODAL 1: HISTORICAL ERA TIME-JUMP BOOKMARKS -->
+  <div id="eraModal" role="dialog" aria-modal="true" aria-label="era" tabindex="-1" data-modal class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div>
+          <h3 class="text-sm font-extrabold text-white">Era Time-Jump, Daily Blitz &amp; Scenarios</h3>
+          <p class="text-[11px] text-slate-400">Play today's 5-Year Blitz, bite-sized Missions, or jump to any Era.</p>
+        </div>
+        <button id="btnCloseEraModal" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+      </div>
+      <div class="grid grid-cols-1 gap-2 my-3 max-h-[70vh] overflow-y-auto pr-1">
+        <!-- DAILY 5-YEAR BLITZ CHALLENGE -->
+        <div class="p-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-emerald-500/15 to-cyan-500/20 border border-amber-400/50">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-400 text-slate-950">🔥 DAILY 5-YEAR BLITZ</span>
+              <div id="dailyBlitzTitle" class="text-xs font-extrabold text-white mt-1">Today's Seeded Challenge</div>
+              <div id="dailyBlitzDesc" class="text-[11px] text-slate-300">Turn $10,000 into $35,000 in 5 years!</div>
+            </div>
+            <button id="btnStartDailyBlitz" type="button" class="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs shrink-0 shadow-md">
+              ▶ Play Blitz
+            </button>
+          </div>
+        </div>
+
+        <!-- BITE-SIZED SCENARIO MISSIONS -->
+        <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-300 mt-1">🎯 Historical Scenario Missions</div>
+        <div id="scenarioListContainer" class="grid grid-cols-1 gap-1.5"></div>
+
+        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1">⏳ Sandbox Era Bookmarks</div>
+        <button type="button" data-eraday="0" class="era-jump-btn text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700">
+          <div class="text-xs font-bold text-amber-300">Jan 2, 1980 — Volcker Shock</div>
+          <div class="text-[11px] text-slate-400">14% cash yield, Gold at $650, Nike &amp; Apple IPOs in Dec 1980.</div>
+        </button>
+        <button type="button" data-eraday="1601" class="era-jump-btn text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700">
+          <div class="text-xs font-bold text-emerald-300">Mar 10, 1986 — Oracle &amp; Microsoft IPOs</div>
+          <div class="text-[11px] text-slate-400">ORCL (Mar 12) and MSFT (Mar 13) go public back-to-back!</div>
+        </button>
+        <button type="button" data-eraday="2015" class="era-jump-btn text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700">
+          <div class="text-xs font-bold text-rose-400">Oct 14, 1987 — Pre-Black Monday</div>
+          <div class="text-[11px] text-slate-400">Days before the Oct 19, 1987 -20.5% single-day crash.</div>
+        </button>
+        <button type="button" data-eraday="3884" class="era-jump-btn text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700">
+          <div class="text-xs font-bold text-cyan-300">Jan 3, 1995 — Dot-Com Takeoff</div>
+          <div class="text-[11px] text-slate-400">Windows 95 &amp; internet boom kick off a 5-year tech mania.</div>
+        </button>
+        <button type="button" data-eraday="5222" class="era-jump-btn text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700">
+          <div class="text-xs font-bold text-rose-300">Mar 6, 2000 — Dot-Com Peak &amp; Pets.com</div>
+          <div class="text-[11px] text-slate-400">Short Pets.com (IPET), Enron (ENE) &amp; WorldCom (WCOM) before they crash!</div>
+        </button>
+        <button type="button" data-eraday="7414" class="era-jump-btn text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700">
+          <div class="text-xs font-bold text-rose-400">Sep 2, 2008 — Lehman Crisis</div>
+          <div class="text-[11px] text-slate-400">Two weeks before Lehman Brothers files Chapter 11.</div>
+        </button>
+        <button type="button" data-eraday="8019" class="era-jump-btn text-left p-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40">
+          <div class="text-xs font-bold text-amber-300">🪙 Jan 3, 2011 — Bitcoin &amp; Crypto Genesis</div>
+          <div class="text-[11px] text-slate-300">Bitcoin (BTC) unlocks at $0.30, followed by Litecoin, XRP, Dogecoin &amp; Ethereum!</div>
+        </button>
+        <button type="button" data-eraday="10378" class="era-jump-btn text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700">
+          <div class="text-xs font-bold text-amber-300">Feb 18, 2020 — COVID Crash &amp; GME Squeeze</div>
+          <div class="text-[11px] text-slate-400">34% crash followed by the 2021 GameStop (GME) &amp; Bitcoin (BTC) mania.</div>
+        </button>
+        <button type="button" data-eraday="11125" class="era-jump-btn text-left p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700">
+          <div class="text-xs font-bold text-indigo-300">Jan 3, 2023 — AI &amp; GLP-1 Supercycle</div>
+          <div class="text-[11px] text-slate-400">NVIDIA, Palantir, Meta &amp; Eli Lilly ignite a historic bull run.</div>
+        </button>
+      </div>
+      <div class="flex justify-end">
+        <button id="btnCancelEraModal" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: NEW GAME / STARTING CAPITAL -->
+  <div id="resetModal" role="dialog" aria-modal="true" aria-label="reset" tabindex="-1" data-modal class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <h3 class="text-sm font-extrabold text-white">Start New 1980 Campaign</h3>
+        <button id="btnCloseResetModal" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+      </div>
+      <p class="text-xs text-slate-300 mt-2.5">
+        Reset the clock to <strong>Jan 2, 1980</strong> and pick your starting capital:
+      </p>
+      <div class="grid grid-cols-3 gap-2 my-3.5">
+        <button type="button" data-startcash="10000" class="start-cash-btn p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-center">
+          <div class="font-mono-num font-bold text-xs text-emerald-300">$10,000</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Classic 1980</div>
+        </button>
+        <button type="button" data-startcash="25000" class="start-cash-btn p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-center">
+          <div class="font-mono-num font-bold text-xs text-white">$25,000</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Prop Trader</div>
+        </button>
+        <button type="button" data-startcash="100000" class="start-cash-btn p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-center">
+          <div class="font-mono-num font-bold text-xs text-amber-300">$100,000</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Wall St Fund</div>
+        </button>
+      </div>
+      <div class="flex justify-end">
+        <button id="btnCancelResetModal" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: ADD CUSTOM RIVAL / CHALLENGER TO LEADERBOARD -->
+  <div id="customRivalModal" role="dialog" aria-modal="true" aria-label="customRival" tabindex="-1" data-modal class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <h3 class="text-sm font-extrabold text-white">Add Custom Leaderboard Rival</h3>
+        <button id="btnCloseCustomRivalModal" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+      </div>
+      <div class="flex flex-col gap-2.5 my-3 text-xs">
+        <div>
+          <label for="rivalNameInput" class="block text-slate-400 mb-1">Rival / Friend Name</label>
+          <input id="rivalNameInput" type="text" placeholder="e.g. Alex (Tech Whale)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none" />
+        </div>
+        <div>
+          <label for="rivalNetWorthInput" class="block text-slate-400 mb-1">Target Net Worth ($ USD)</label>
+          <input id="rivalNetWorthInput" type="number" min="100" step="1000" value="250000" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 font-mono-num text-white outline-none" />
+        </div>
+        <div>
+          <label for="rivalStrategyInput" class="block text-slate-400 mb-1">Strategy Note</label>
+          <input id="rivalStrategyInput" type="text" placeholder="e.g. Bought AAPL &amp; NVDA early" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none" />
+        </div>
+        <div class="pt-2 border-t border-slate-800">
+          <label for="importChallengeCodeInput" class="block text-amber-300 font-semibold mb-1">📋 Or Paste a Friend's Shareable Challenge Code</label>
+          <div class="flex gap-1.5">
+            <input id="importChallengeCodeInput" type="text" placeholder="Paste WSTM-... code here" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 font-mono-num text-[11px] text-white outline-none" />
+            <button id="btnImportChallengeCode" type="button" class="px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-[11px] shrink-0">Import</button>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button id="btnCancelCustomRivalModal" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300">Cancel</button>
+        <button id="btnSaveCustomRival" type="button" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950">Add to Leaderboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: TYCOON ABILITIES, PERKS & ACHIEVEMENTS -->
+  <div id="perksModal" role="dialog" aria-modal="true" aria-label="perks" tabindex="-1" data-modal class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-400">WALL STREET PRO ABILITIES</span>
+          <h3 class="text-sm font-extrabold text-white">Tycoon Desk Perks &amp; Career Badges</h3>
+        </div>
+        <button id="btnClosePerksModal" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+      </div>
+
+      <!-- Active Pro Desk Capabilities -->
+      <div class="my-3 flex flex-col gap-2 text-xs max-h-80 overflow-y-auto pr-1">
+        <div class="p-2.5 rounded-xl bg-slate-950/90 border border-emerald-500/30 flex items-center justify-between">
+          <div>
+            <div class="font-bold text-emerald-300">📉 Short-Selling &amp; Bankruptcy Desk</div>
+            <div class="text-[11px] text-slate-400">Short any overvalued stock or fraud trap (Pan Am, Pets.com, Enron, WorldCom, Lehman, Blockbuster, Kodak) down to $0.00!</div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">ACTIVE</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-slate-950/90 border border-amber-500/30 flex items-center justify-between">
+          <div>
+            <div class="font-bold text-amber-300">⚡ Pre-IPO Syndicate &amp; Limit Queue</div>
+            <div class="text-[11px] text-slate-400">Select any locked Pre-IPO stock (AAPL, MSFT, NVDA, BTC) to queue an automatic opening-bell buy order, or queue -10% dip buys.</div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px]">ACTIVE</span>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-slate-950/90 border border-indigo-500/30 flex items-center justify-between">
+          <div>
+            <div class="font-bold text-indigo-300">🏦 Prime Broker Margin (1.5x / 2x)</div>
+            <div class="text-[11px] text-slate-400">Amplify buying power up to 2x Net Worth on the Trade screen, plus earn +0.50% bonus yield on uninvested cash once Net Worth hits $25k.</div>
+          </div>
+          <span id="perkPrimeBrokerStatus" class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold text-[10px]">ACTIVE</span>
+        </div>
+
+        <div class="mt-1 font-bold uppercase tracking-wider text-[10px] text-slate-400">Career Milestone Badges</div>
+        <div id="achievementsGridContainer" class="grid grid-cols-2 gap-1.5"></div>
+      </div>
+
+      <div class="flex justify-end">
+        <button id="btnDonePerksModal" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-200">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 5: INTERACTIVE HISTORICAL DILEMMA POP-UP -->
+  <div id="dilemmaModal" role="dialog" aria-modal="true" aria-label="dilemma" tabindex="-1" data-modal class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-amber-500/50 rounded-2xl max-w-md w-full p-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <span id="dilemmaEraBadge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+          ⚡ WALL STREET DECISION EVENT
+        </span>
+        <span id="dilemmaDateLabel" class="font-mono-num text-xs text-slate-400">Oct 19, 1987</span>
+      </div>
+      <h3 id="dilemmaTitle" class="text-base font-extrabold text-white mt-2.5">Black Monday Liquidity Crunch</h3>
+      <p id="dilemmaDescription" class="text-xs text-slate-300 mt-1.5 leading-relaxed"></p>
+      <div class="flex flex-col gap-2 my-3.5">
+        <button id="btnDilemmaChoiceA" type="button" class="text-left p-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 transition">
+          <div id="dilemmaChoiceATitle" class="text-xs font-extrabold text-emerald-300">Option A</div>
+          <div id="dilemmaChoiceADesc" class="text-[11px] text-slate-300 mt-0.5"></div>
+        </button>
+        <button id="btnDilemmaChoiceB" type="button" class="text-left p-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 transition">
+          <div id="dilemmaChoiceBTitle" class="text-xs font-extrabold text-cyan-300">Option B</div>
+          <div id="dilemmaChoiceBDesc" class="text-[11px] text-slate-300 mt-0.5"></div>
+        </button>
+      </div>
+      <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800">
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input id="chkEnableDilemmas" type="checkbox" checked class="rounded accent-emerald-500" />
+          <span>Show Interactive Dilemma Events</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: 2026 CAREER WRAP-UP SCORECARD, SHARE CODE & PRESTIGE (NEW GAME+) -->
+  <div id="careerWrapUpModal" role="dialog" aria-modal="true" aria-label="career scorecard" tabindex="-1" data-modal class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">WALL STREET CAREER REPORT</span>
+          <h3 id="wrapUpHeaderTitle" class="text-sm font-extrabold text-white">Campaign Performance &amp; Prestige</h3>
+        </div>
+        <button id="btnCloseWrapUpModal" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+      </div>
+
+      <!-- Grade & Net Worth Hero Banner -->
+      <div class="my-3 p-3.5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/60 border border-slate-800 flex items-center justify-between gap-3">
+        <div>
+          <div class="text-[10px] uppercase font-bold text-slate-400">Career Net Worth</div>
+          <div id="wrapUpNetWorth" class="font-mono-num text-2xl font-extrabold text-white">$10,000.00</div>
+          <div id="wrapUpReturnVsSpx" class="text-[11px] font-mono-num text-emerald-400 mt-0.5">+0.0% (+0.0% Alpha)</div>
+        </div>
+        <div class="text-center px-3.5 py-2 rounded-2xl bg-amber-400/15 border border-amber-400/40">
+          <div class="text-[9px] uppercase font-bold text-amber-300">Rating</div>
+          <div id="wrapUpLetterGrade" class="font-mono-num text-2xl font-extrabold text-amber-300">B</div>
+        </div>
+      </div>
+
+      <!-- Key Career Stats Grid -->
+      <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+          <div class="text-[10px] text-slate-400">Best Single Trade</div>
+          <div id="wrapUpBestTrade" class="font-mono-num font-bold text-emerald-400 truncate mt-0.5">—</div>
+        </div>
+        <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+          <div class="text-[10px] text-slate-400">Worst Trade / Wipeout</div>
+          <div id="wrapUpWorstTrade" class="font-mono-num font-bold text-rose-400 truncate mt-0.5">—</div>
+        </div>
+        <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+          <div class="text-[10px] text-slate-400">Max Peak Drawdown</div>
+          <div id="wrapUpMaxDrawdown" class="font-mono-num font-bold text-amber-300 mt-0.5">0.0%</div>
+        </div>
+        <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+          <div class="text-[10px] text-slate-400">Lifestyle &amp; Badges</div>
+          <div id="wrapUpLifestyleSummary" class="font-mono-num font-bold text-cyan-300 mt-0.5">0/6 • 0/10</div>
+        </div>
+      </div>
+
+      <!-- Shareable Challenge Code Box -->
+      <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 mb-3">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[10px] font-bold uppercase text-cyan-300">Shareable Challenge &amp; Rival Code</span>
+          <button id="btnCopyShareCode" type="button" class="px-2 py-0.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-[10px] font-bold border border-cyan-500/30">
+            📋 Copy Recap &amp; Code
+          </button>
+        </div>
+        <input id="wrapUpShareCodeOutput" type="text" readonly class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-[10px] font-mono-num text-slate-300 outline-none" />
+      </div>
+
+      <!-- Roguelite Prestige ("New Game+") Box -->
+      <div class="p-3 rounded-xl bg-indigo-500/15 border border-indigo-500/40 mb-3">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <div class="text-xs font-extrabold text-indigo-300">🎖️ Roguelite Prestige (New Game+ <span id="wrapUpPrestigeCount">★0</span>)</div>
+            <p class="text-[11px] text-slate-300 mt-0.5">
+              Retire with ≥$50,000 Net Worth to earn <strong>+1 Prestige Star (★)</strong>: permanently grants <strong>+25% Starting Cash</strong>, <strong>+0.50% Cash APY</strong>, and unlocks <strong>2.5x Margin</strong> on all future runs!
+            </p>
+          </div>
+        </div>
+        <button id="btnPrestigeReset" type="button" class="mt-2.5 w-full py-2 rounded-xl font-extrabold text-xs uppercase bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md transition">
+          ★ Retire &amp; Claim Prestige Star (+25% Capital)
+        </button>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button id="btnDoneWrapUpModal" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-200">Continue Playing</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL 7: INTERACTIVE TUTORIALS, VISUAL FEATURE GALLERY & PRO HOT-TIPS CENTER -->
+  <div id="tutorialModal" role="dialog" aria-modal="true" aria-label="tutorial" tabindex="-1" data-modal class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-4 shadow-2xl max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">PLAYER HANDBOOK &amp; FEATURE GALLERY</span>
+          <h3 class="text-sm font-extrabold text-white">💡 Tutorials, Visual Tour &amp; Pro Hot-Tips</h3>
+        </div>
+        <button id="btnCloseTutorialModal" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
+      </div>
+
+      <!-- 3-Tab Switcher inside Tutorial Modal -->
+      <div class="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 my-2.5">
+        <button type="button" data-tuttab="features" class="tut-tab-btn py-1.5 rounded-lg text-[11px] font-bold bg-emerald-500 text-slate-950">
+          📸 10 Features
+        </button>
+        <button type="button" data-tuttab="hottips" class="tut-tab-btn py-1.5 rounded-lg text-[11px] font-semibold text-slate-300 hover:text-white">
+          🔥 16 Hot-Tips
+        </button>
+        <button type="button" data-tuttab="walkthrough" class="tut-tab-btn py-1.5 rounded-lg text-[11px] font-semibold text-slate-300 hover:text-white">
+          🎓 6-Step Tour
+        </button>
+      </div>
+
+      <!-- TAB 1: VISUAL FEATURE GALLERY (10 ANNOTATED FEATURE CARDS + SPOTLIGHT JUMP) -->
+      <div id="tutPanelFeatures" class="flex-1 overflow-y-auto pr-1 flex flex-col gap-2 text-xs"></div>
+
+      <!-- TAB 2: PRO HOT-TIPS & ERA PLAYBOOK (16 CATEGORIZED TIPS) -->
+      <div id="tutPanelHotTips" class="hidden flex-1 overflow-y-auto pr-1 flex flex-col gap-2 text-xs">
+        <div class="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
+          <button type="button" data-tipcat="all" class="tip-cat-btn px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-400 text-slate-950 shrink-0">All (16)</button>
+          <button type="button" data-tipcat="era" class="tip-cat-btn px-2 py-1 rounded-lg text-[10px] bg-slate-800 text-slate-300 shrink-0">Era Playbook</button>
+          <button type="button" data-tipcat="pro" class="tip-cat-btn px-2 py-1 rounded-lg text-[10px] bg-slate-800 text-slate-300 shrink-0">Shorts &amp; 5x Options</button>
+          <button type="button" data-tipcat="blind" class="tip-cat-btn px-2 py-1 rounded-lg text-[10px] bg-slate-800 text-slate-300 shrink-0">Blind Mode &amp; Prestige</button>
+        </div>
+        <div id="hotTipsListContainer" class="flex flex-col gap-2"></div>
+      </div>
+
+      <!-- TAB 3: INTERACTIVE 6-STEP GUIDED WALKTHROUGH -->
+      <div id="tutPanelWalkthrough" class="hidden flex-1 overflow-y-auto pr-1 flex flex-col gap-2.5 text-xs">
+        <div class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40">
+          <div class="text-xs font-extrabold text-emerald-300">🎓 Interactive Spotlight Bootcamp</div>
+          <p class="text-[11px] text-slate-300 mt-0.5">
+            Tap any lesson below to jump directly to that screen and highlight the exact control with a glowing emerald spotlight ring!
+          </p>
+        </div>
+        <div id="walkthroughStepsContainer" class="flex flex-col gap-2"></div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2.5 mt-2 border-t border-slate-800">
+        <span class="text-[10px] text-slate-400">Tap any "Spotlight &amp; Try" button to jump straight to that feature.</span>
+        <button id="btnDoneTutorialModal" type="button" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-200">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <script>/* @APP_JS */</script>
+</body>
+</html>

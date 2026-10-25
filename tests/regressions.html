@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Stocktrade regression tests</title>
+<h1>Stocktrade regression tests</h1>
+<p>Serve the project over HTTP and open this page. Tests run against both game files and restore existing game storage afterward.</p>
+<pre id="results">Running…</pre>
+<iframe id="game" title="Game under test" style="position:fixed;left:-10000px;top:0;width:390px;height:844px"></iframe>
+<script>
+(async () => {
+  const keys = ['ws_time_machine_campaign_save_v3', 'ws_time_machine_custom_lb_v2', 'ws_time_machine_prestige_v1'];
+  const backup = keys.map(key => localStorage.getItem(key));
+  const frame = document.getElementById('game');
+  const results = [];
+  let passed = 0;
+  const assert = (condition, message) => {
+    if (!condition) throw new Error(message);
+    passed++;
+    results.push('PASS ' + message);
+  };
+  const load = path => new Promise((resolve, reject) => {
+    frame.onload = resolve;
+    frame.onerror = reject;
+    frame.src = path + '?regression=' + Date.now();
+  });
+  const run = expression => frame.contentWindow.eval(expression);
+  const code = payload => 'WSTM-' + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  try {
+    for (const page of ['index.html', 'wall_street_1980_tycoon.html']) {
+      keys.forEach(key => localStorage.removeItem(key));
+      results.push('\n' + page);
+      await load('../' + page);
+      run('soundEnabled = false; initGameState(10000); state.maxLeverage = 2; executeShortSell("SPX", 20000, true); executeCoverShort("SPX", 1000, true)');
+      assert(run('Math.abs(computePortfolioMetrics().netWorth - 10000) < 0.001 && state.cash === -9000'), 'Partial cover preserves debt and net worth');
+      run('executeSellAllForSymbol("SPX", "TEST", true)');
+      assert(run('Math.abs(state.cash - 10000) < 0.001 && Object.keys(state.positions).length === 0'), 'Full cover releases remaining collateral without profit');
+      run('initGameState(10000); state.maxLeverage = 2; executeBuy("IBM", 10000, null, true); executeShortSell("SPX", 10000, true); executeCoverShort("SPX", 1000, true); executeBuy("GLD", 1000, null, true); executeSellAllForSymbol("SPX", "TEST", true)');
+      assert(run('Math.abs(computePortfolioMetrics().netWorth - 10000) < 0.001 && state.cash < 0'), 'Full cover preserves debt when other positions remain');
+
+      run('initGameState(10000); executeBuy("SPX", 1000, null, true); saveCampaignToStorage()');
+      await load('../' + page);
+      run('soundEnabled = false');
+      assert(run('state.dayIdx === 0 && state.cash === 9000 && state.positions.SPX.totalCost === 1000'), 'First-day trades survive a real reload');
+      run('state.dayIdx = 100; saveCampaignToStorage(); document.querySelector(\'[data-startcash="25000"]\').click()');
+      await load('../' + page);
+      run('soundEnabled = false');
+      assert(run('state.dayIdx === 0 && state.startingCash === 25000 && state.cash === 25000 && Object.keys(state.positions).length === 0'), 'New Game replaces the previous campaign across reload');
+
+      run('state.prestigeLevel = 0; initGameState(10000, SCENARIO_MISSIONS[5]); renderAll()');
+      assert(run('computeCareerGrade(10000, state.dayIdx) === "B" && document.getElementById("kpiBenchmarkValue").textContent === "$10,000.00" && document.getElementById("kpiYearsElapsed").textContent === "0.0 Yrs"'), 'Fresh scenario starts at a neutral grade and benchmark');
+      assert(run('Math.abs((state.dayIdx - state.runStartDayIdx) / 252) === 0'), 'Scenario elapsed time starts at zero');
+      for (let scenario = 0; scenario < 6; scenario++) {
+        run(`initGameState(10000, SCENARIO_MISSIONS[${scenario}]); state.dayIdx = state.activeScenario.endDayIdx - 1; stepDays(5)`);
+        assert(run('state.scenarioCompleted && state.dayIdx === state.activeScenario.endDayIdx && !state.isPlaying'), 'Multi-day step stops exactly at scenario ' + scenario + ' deadline');
+        run('startSimulation(); stepDays(21); jumpToEraDay(0)');
+        assert(run('state.dayIdx === state.activeScenario.endDayIdx && !state.isPlaying'), 'Completed scenario blocks playback, stepping and rewind');
+        await load('../' + page);
+        run('soundEnabled = false');
+        assert(run('state.scenarioCompleted && isScenarioComplete()'), 'Scenario completion survives reload');
+        run('document.getElementById("btnExitScenarioMode").click()');
+        if (scenario !== 5) {
+          const before = run('state.dayIdx');
+          run('stepDays(1)');
+          assert(run('state.dayIdx') === before + 1, 'Explicit sandbox exit allows advancement');
+        }
+      }
+      run('state.prestigeLevel = 1; initGameState(10000); state.dayIdx = 100; jumpToEraDay(50); jumpToEraDay(25)');
+      assert(run('state.startingCash === 12500 && state.baseStartingCash === 10000'), 'Repeated rewind never reapplies prestige to boosted cash');
+      run('saveCampaignToStorage(); state.baseStartingCash = 1; loadCampaignFromStorage()');
+      assert(run('state.baseStartingCash === 10000'), 'Base starting cash survives resume');
+      run('state.prestigeLevel = 0; initGameState(10000); state.dayIdx = 100; state.cash = 20000; state.netWorthHistory[50] = 5000; state.netWorthHistory[60] = 0; state.stopLossPct = .25; state.takeProfitPct = 2; saveCampaignToStorage()');
+      await load('../' + page);
+      run('soundEnabled = false');
+      assert(run('state.netWorthHistory[50] === 5000 && state.netWorthHistory[60] === 0 && state.netWorthHistory[100] === 20000'), 'History preserves actual drawdowns and zero balances');
+      assert(run('state.stopLossPct === .25 && state.takeProfitPct === 2 && document.getElementById("stopLossSelect").value === "0.25" && document.getElementById("takeProfitSelect").value === "2.00"'), 'Risk settings and controls survive reload');
+      run('initGameState(10000)');
+      assert(run('state.stopLossPct === 0 && state.takeProfitPct === 0 && document.getElementById("stopLossSelect").value === "0"'), 'New campaigns reset risk controls');
+      run('stepDays(1)');
+      assert(run('JSON.parse(localStorage.getItem(STORAGE_KEY_CAMPAIGN)).dayIdx === 1'), 'Every advanced day is saved');
+      run('processSingleTradingDayStep()');
+      await Promise.resolve();
+      assert(run('JSON.parse(localStorage.getItem(STORAGE_KEY_CAMPAIGN)).dayIdx === 2'), 'Playback saves after each synchronous simulation update');
+      run('document.querySelectorAll(".leverage-btn")[2].click(); document.getElementById("btnQueueDipLimitOrder").click()');
+      assert(run('JSON.parse(localStorage.getItem(STORAGE_KEY_CAMPAIGN)).maxLeverage === 2 && JSON.parse(localStorage.getItem(STORAGE_KEY_CAMPAIGN)).pendingOrders.length === 1'), 'Leverage and queued orders save immediately');
+      run('document.querySelector("[data-cancelord]").click()');
+      assert(run('JSON.parse(localStorage.getItem(STORAGE_KEY_CAMPAIGN)).pendingOrders.length === 0'), 'Cancelled orders stay cancelled in storage');
+      run('state.cash = 12345; window.dispatchEvent(new Event("pagehide"))');
+      assert(run('JSON.parse(localStorage.getItem(STORAGE_KEY_CAMPAIGN)).cash === 12345'), 'Page-hide flush saves current campaign');
+      const validSave = run('localStorage.getItem(STORAGE_KEY_CAMPAIGN)');
+      const invalidSaves = [
+        {...JSON.parse(validSave), dayIdx: .5},
+        {...JSON.parse(validSave), cash: 'bad'},
+        {...JSON.parse(validSave), positions: {UNKNOWN: {shares: 1, avgCost: 10, totalCost: 10}}},
+        {...JSON.parse(validSave), optionsPositions: [{symbol: 'SPX'}]},
+        {...JSON.parse(validSave), pendingOrders: [{symbol: 'SPX'}]},
+        {...JSON.parse(validSave), activeScenario: {id: 'broken'}},
+        {...JSON.parse(validSave), tradeHistory: [{}]},
+        {...JSON.parse(validSave), ownedLifestyle: {unknown: true}},
+        {...JSON.parse(validSave), netWorthHistory: [1]},
+        {...JSON.parse(validSave), stopLossPct: '0.25'}
+      ];
+      for (const bad of invalidSaves) {
+        frame.contentWindow.localStorage.setItem('ws_time_machine_campaign_save_v3', JSON.stringify(bad));
+        assert(run('(() => { const before = JSON.stringify(state); const ok = loadCampaignFromStorage(); return !ok && JSON.stringify(state) === before; })()'), 'Malformed save rejected without mutating live state');
+      }
+      const legacy = JSON.parse(validSave);
+      for (const key of ['version', 'netWorthHistory', 'baseStartingCash', 'runStartDayIdx', 'scenarioCompleted', 'stopLossPct', 'takeProfitPct']) delete legacy[key];
+      frame.contentWindow.localStorage.setItem('ws_time_machine_campaign_save_v3', JSON.stringify(legacy));
+      assert(run('loadCampaignFromStorage() && Number.isFinite(state.netWorthHistory[state.dayIdx])'), 'Legacy saves still load');
+      run('state.dayIdx = 100; saveCampaignToStorage()');
+      const legacyHistory = JSON.parse(run('localStorage.getItem(STORAGE_KEY_CAMPAIGN)'));
+      delete legacyHistory.netWorthHistory;
+      frame.contentWindow.localStorage.setItem('ws_time_machine_campaign_save_v3', JSON.stringify(legacyHistory));
+      assert(run('loadCampaignFromStorage() && Number.isNaN(state.netWorthHistory[50])'), 'Legacy missing history stays unknown instead of invented');
+      run('initGameState(10000); window.originalSetItem = Storage.prototype.setItem; Storage.prototype.setItem = function() { throw new Error("Full"); }');
+      try {
+        assert(run('saveCampaignToStorage() === false && document.getElementById("toastContainer").textContent.includes("Could not save campaign")'), 'Storage failure is reported');
+      } finally { run('Storage.prototype.setItem = window.originalSetItem'); }
+      run('Object.defineProperty(navigator, "clipboard", {configurable: true, value: {writeText: async text => { window.copiedCode = text; }}}); document.getElementById("btnCopyShareCode").click()');
+      await new Promise(resolve => setTimeout(resolve, 0));
+      assert(run('window.copiedCode.startsWith("WSTM-") && !window.copiedCode.includes(" ") && document.getElementById("toastContainer").textContent.includes("Copied Rival Code")'), 'Clipboard copies an importable code and confirms success');
+      run('Object.defineProperty(navigator, "clipboard", {configurable: true, value: {writeText: async () => { throw new Error("Denied"); }}}); document.getElementById("btnCopyShareCode").click()');
+      await new Promise(resolve => setTimeout(resolve, 0));
+      assert(run('document.getElementById("toastContainer").lastElementChild.textContent.includes("Copy the selected Rival Code manually")'), 'Clipboard rejection shows manual-copy feedback');
+      run('Object.defineProperty(navigator, "clipboard", {configurable: true, value: undefined}); document.getElementById("btnCopyShareCode").click()');
+      assert(run('document.getElementById("toastContainer").lastElementChild.textContent.includes("Copy the selected Rival Code manually")'), 'Missing clipboard API shows manual-copy feedback');
+
+      run('initGameState(10000); state.mysteryMode = true; state.marketSearchQuery = "AAPL"; renderMarketWatchList()');
+      assert(!frame.contentDocument.querySelector('#stockListContainer .stock-watch-row'), 'Mystery search cannot identify assets by real ticker');
+      run('state.marketSearchQuery = "Apple"; renderMarketWatchList()');
+      assert(!frame.contentDocument.querySelector('#stockListContainer .stock-watch-row'), 'Mystery search cannot identify assets by company name');
+      run('state.marketSearchQuery = getDisplaySymbol("AAPL"); renderMarketWatchList()');
+      assert(frame.contentDocument.querySelectorAll('#stockListContainer .stock-watch-row').length === 1, 'Mystery code remains searchable');
+      run('state.marketSearchQuery = "Mystery Tech"; renderMarketWatchList()');
+      assert(frame.contentDocument.querySelectorAll('#stockListContainer .stock-watch-row').length > 1, 'Mystery names and sectors remain searchable');
+      run('state.selectedSymbol = "AAPL"; document.getElementById("btnQueuePreIpoOrder").click()');
+      assert(run('!document.getElementById("toastContainer").lastElementChild.textContent.includes("AAPL") && !document.getElementById("pendingOrdersList").textContent.includes("AAPL")'), 'Pre-IPO notifications and queued orders mask identities');
+      run('state.selectedSymbol = "SPX"; document.getElementById("btnQueueDipLimitOrder").click(); executeBuy("SPX", 1000, null, true); executeSellAllForSymbol("SPX", "TEST", true); recordTradeStats("SPX", 100, "SELL", getStockPrice("SPX")); recordTradeStats("SPX", -50, "SELL", getStockPrice("SPX")); renderAll(); state.activeScreen = "news"; state.activeBottomTab = "trades"; renderPortfolioAndLogs(); state.activeScreen = "trade"; openCareerWrapUpModal()');
+      assert(run('!document.getElementById("pendingOrdersList").textContent.includes("SPX") && !document.getElementById("tabPanelTrades").textContent.includes("SPX") && !document.getElementById("wrapUpBestTrade").textContent.includes("SPX") && !document.getElementById("wrapUpWorstTrade").textContent.includes("SPX")'), 'Pending orders, trade logs and scorecard keep mystery labels');
+      run('state.marketSearchQuery = "AAPL"; state.mysteryMode = false; renderMarketWatchList()');
+      assert(frame.contentDocument.querySelectorAll('#stockListContainer .stock-watch-row').length === 1, 'Normal search still accepts real symbols');
+      run('state.mysteryMode = true; state.dayIdx = ASSET_MAP.IPET.delistIdx; state.marketSearchQuery = "IPET"; renderMarketWatchList()');
+      assert(frame.contentDocument.querySelectorAll('#stockListContainer .stock-watch-row').length === 1, 'Bankrupt identities remain intentionally revealed');
+      for (const short of [false, true]) {
+        run(`initGameState(10000); state.dayIdx = ASSET_MAP.IPET.delistIdx - 1; ${short ? 'executeShortSell' : 'executeBuy'}('IPET', 1000, ${short ? 'true' : 'null, true'}); processSingleTradingDayStep()`);
+        assert(run(short ? 'state.bestTrade.symbol === "IPET" && state.bestTrade.pnl === 1000 && state.realizedPnL === 1000' : 'state.worstTrade.symbol === "IPET" && state.worstTrade.pnl === -1000 && state.realizedPnL === -1000'), 'Bankruptcy ' + (short ? 'short gain' : 'long wipeout') + ' updates scorecard statistics');
+        assert(run('!state.positions.IPET && state.tradeMarkers.at(-1).price === 0 && state.tradeMarkers.at(-1).dayIdx === ASSET_MAP.IPET.delistIdx'), 'Zero-price bankruptcy closure has a trade marker');
+        run('saveCampaignToStorage()');
+        await load('../' + page);
+        run('soundEnabled = false');
+        assert(run(short ? 'state.bestTrade.pnl === 1000' : 'state.worstTrade.pnl === -1000'), 'Bankruptcy trade statistics survive reload');
+        run('processSingleTradingDayStep()');
+        assert(run(short ? 'state.realizedPnL === 1000' : 'state.realizedPnL === -1000'), 'Bankruptcy profit/loss is recorded only once');
+      }
+      run('initGameState(10000); state.mysteryMode = false; renderTutorialAndHotTipsModal()');
+      assert(run('document.getElementById("simulationModelNotes").textContent.includes("synthetic") && document.getElementById("simulationModelNotes").textContent.includes("approximate weekday calendar") && document.getElementById("simulationModelNotes").textContent.includes("not real option prices")'), 'In-game handbook explains simulation limitations');
+      for (const [type, move, expected] of [['CALL', 0, 1000], ['PUT', 0, 1000], ['CALL', .2, 2000], ['PUT', .2, 0], ['CALL', -.2, 0], ['PUT', -.2, 2000]]) {
+        run('initGameState(10000); state.dayIdx = 10');
+        const originalPrice = run('ASSET_MAP.SPX.prices[state.dayIdx]');
+        try {
+          run(`buyOptionContract('SPX', '${type}', 1000); ASSET_MAP.SPX.prices[state.dayIdx] *= ${1 + move}`);
+          assert(Math.abs(run('computePortfolioMetrics().netWorth - state.cash') - expected) < .001, 'Arcade ' + type + ' valuation matches documented return ' + move);
+          const cashBefore = run('state.cash');
+          run('settleOptionContract(state.optionsPositions[0], "TEST", true)');
+          assert(Math.abs(run('state.cash') - cashBefore - expected) < .001, 'Arcade payout matches documented formula');
+        } finally { run(`ASSET_MAP.SPX.prices[state.dayIdx] = ${originalPrice}`); }
+      }
+      run('initGameState(10000); state.mysteryMode = false; state.marketSearchQuery = ""');
+
+      const payload = {n: '<img src=x onerror="window.injectionExecuted=true">', nw: 0, r: 0, d: '1980-01-02', g: 'B'};
+      const importCode = payload => {
+        frame.contentDocument.getElementById('importChallengeCodeInput').value = code(payload);
+        frame.contentDocument.getElementById('btnImportChallengeCode').click();
+      };
+      importCode(payload);
+      assert(run('state.customLeaderboard[0].netWorth === 0 && state.customLeaderboard[0].returnPct === 0'), 'Valid zero-valued scores are preserved');
+      assert(frame.contentDocument.getElementById('leaderboardListContainer').textContent.includes(payload.n) && !frame.contentDocument.querySelector('#leaderboardListContainer img'), 'Imported names are literal text');
+      for (const invalid of [null, [], {...payload, n: {}}, {...payload, nw: '100'}, {...payload, nw: -1}, {...payload, r: null}, {...payload, d: '<img src=x>'}, {...payload, g: '<img src=x>'}]) {
+        const count = run('state.customLeaderboard.length');
+        importCode(invalid);
+        assert(run('state.customLeaderboard.length') === count, 'Malformed challenge payload rejected: ' + JSON.stringify(invalid));
+      }
+      run(`state.customLeaderboard[0].avatar = '<img src=x onerror="window.injectionExecuted=true">'; state.customLeaderboard[0].strategy = '<svg onload="window.injectionExecuted=true"></svg>'; saveCustomLeaderboard(state.customLeaderboard)`);
+      await load('../' + page);
+      assert(!frame.contentDocument.querySelector('#leaderboardListContainer img, #leaderboardListContainer svg') && !frame.contentWindow.injectionExecuted, 'Persisted names, avatars and strategies remain safe after reload');
+      const validCode = run('generateShareableChallengeCode()');
+      frame.contentDocument.getElementById('importChallengeCodeInput').value = validCode;
+      frame.contentDocument.getElementById('btnImportChallengeCode').click();
+      assert(run('state.customLeaderboard[0].name === "WallStTycoon"'), 'Generated challenge codes still import');
+      run('[...modalStack].reverse().forEach(closeModal); initGameState(10000); state.activeScreen = "trade"; renderAll()');
+      assert(run('!document.querySelector("meta[name=viewport]").content.includes("user-scalable=no")'), 'Browser zoom is enabled');
+      assert(run('[...document.querySelectorAll("[data-modal]")].every(modal => modal.getAttribute("role") === "dialog" && modal.getAttribute("aria-modal") === "true")'), 'All modals have dialog semantics');
+      run('document.getElementById("btnOpenResetModal").focus(); document.getElementById("btnOpenResetModal").click()');
+      assert(run('document.getElementById("resetModal").contains(document.activeElement) && document.getElementById("appShellContainer").inert'), 'Opening a dialog moves focus and isolates the background');
+      const modalDay = run('state.dayIdx');
+      run('window.dispatchEvent(new KeyboardEvent("keydown", {key:" ", code:"Space", bubbles:true})); window.dispatchEvent(new KeyboardEvent("keydown", {key:"ArrowRight", code:"ArrowRight", bubbles:true}))');
+      assert(run('state.dayIdx') === modalDay && run('!state.isPlaying'), 'Space and Arrow shortcuts cannot advance time behind a modal');
+      run('modalFocusable(document.getElementById("resetModal")).at(-1).focus(); document.activeElement.dispatchEvent(new KeyboardEvent("keydown", {key:"Tab", bubbles:true, cancelable:true}))');
+      assert(run('document.activeElement === modalFocusable(document.getElementById("resetModal"))[0]'), 'Tab wraps to the first modal control');
+      run('document.activeElement.dispatchEvent(new KeyboardEvent("keydown", {key:"Tab", shiftKey:true, bubbles:true, cancelable:true}))');
+      assert(run('document.activeElement === modalFocusable(document.getElementById("resetModal")).at(-1)'), 'Shift-Tab wraps to the last modal control');
+      run('document.activeElement.dispatchEvent(new KeyboardEvent("keydown", {key:"Escape", bubbles:true, cancelable:true}))');
+      assert(run('!hasOpenModal() && !document.getElementById("appShellContainer").inert && document.activeElement.id === "btnOpenResetModal"'), 'Escape closes the dialog and restores opener focus');
+      run('document.getElementById("btnPlayPause").focus(); document.activeElement.dispatchEvent(new KeyboardEvent("keydown", {key:" ", code:"Space", bubbles:true, cancelable:true}))');
+      assert(run('!state.isPlaying'), 'Global Space shortcut leaves native button activation alone');
+      assert(run('["headerNewsBarBtn", "btnCycleHotTip", "btnQuickOpenMarket"].every(id => document.getElementById(id).tagName === "BUTTON")'), 'Clickable header controls are semantic buttons');
+      const hiddenBefore = run('document.getElementById("stockListContainer").innerHTML');
+      run('stepDays(1)');
+      assert(run('document.getElementById("stockListContainer").innerHTML') === hiddenBefore, 'Simulation does not rebuild the hidden market screen');
+      run('switchScreen("market"); window.testRow = document.querySelector(".stock-watch-row"); window.testRow.focus(); stepDays(1)');
+      assert(run('document.querySelector(".stock-watch-row") === window.testRow && document.activeElement === window.testRow && window.testRow.tagName === "BUTTON"'), 'Market quote updates preserve row buttons and keyboard focus');
+      run('switchScreen("news"); document.querySelectorAll(".bottom-tab-btn")[1].click()');
+      assert(run('document.getElementById("tabPanelTrades").textContent.includes("No trades executed")'), 'Switching to a news tab renders its current content');
+      assert(run('document.querySelectorAll("script[src], link[rel=stylesheet], link[rel=preconnect]").length === 0'), 'Standalone entrypoints have no external script, style or font requests');
+    }
+    window.regressionResult = {passed, failed: 0};
+    results.push('\n' + passed + ' checks passed.');
+  } catch (error) {
+    window.regressionResult = {passed, failed: 1, error: error.message};
+    results.push('FAIL ' + error.stack);
+  } finally {
+    frame.remove();
+    keys.forEach((key, index) => backup[index] === null ? localStorage.removeItem(key) : localStorage.setItem(key, backup[index]));
+    document.getElementById('results').textContent = results.join('\n');
+  }
+})();
+</script>
+</html>
